@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './App.css';
 
 function ResumeRanker() {
   const [jdFile, setJdFile] = useState(null);
@@ -30,6 +31,7 @@ function ResumeRanker() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setResults([]);
     try {
       // Upload JD
       const jd_id = await uploadFile(jdFile, 'jd');
@@ -54,25 +56,25 @@ function ResumeRanker() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: 'auto' }}>
+    <div className="resume-ranker-container">
       <h2>AI-Powered Resume Ranker</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Job Description (PDF/DOCX): </label>
-          <input type="file" accept=".pdf,.docx" onChange={handleJdChange} required />
+          <label>Job Description (PDF/DOCX):</label>
+          <input type="file" accept=".pdf,.docx,.txt" onChange={handleJdChange} required />
         </div>
         <div>
-          <label>Resumes (PDF/DOCX, multiple): </label>
-          <input type="file" accept=".pdf,.docx" multiple onChange={handleResumeChange} required />
+          <label>Resumes (PDF/DOCX/TXT, multiple):</label>
+          <input type="file" accept=".pdf,.docx,.txt" multiple onChange={handleResumeChange} required />
         </div>
         <button type="submit" disabled={loading}>Rank Resumes</button>
       </form>
-      {loading && <p>Processing...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {loading && <div className="loading">Processing...</div>}
+      {error && <div className="error">{error}</div>}
       {results.length > 0 && (
         <div>
-          <h3>Results</h3>
-          <table border="1" cellPadding="8">
+          <h3 style={{textAlign: 'center', color: '#3730a3', marginTop: '2rem'}}>Results</h3>
+          <table className="results-table">
             <thead>
               <tr>
                 <th>Rank</th>
