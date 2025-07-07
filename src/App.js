@@ -1,10 +1,11 @@
 import logo from './logo.svg';
 import './App.css';
+import ResumeRanker from './ResumeRanker';
 
 function App() {
   return (
     <div className="App">
-      <h1>Start here</h1>
+      <ResumeRanker />
     </div>
   );
 }
