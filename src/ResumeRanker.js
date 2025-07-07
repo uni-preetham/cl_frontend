@@ -9,7 +9,8 @@ function ResumeRanker() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [jdId, setJdId] = useState('');
-  const [resumeIds, setResumeIds] = useState([]);
+  // Store array of { id, filename }
+  const [resumeMeta, setResumeMeta] = useState([]);
 
   const handleJdChange = (e) => {
     setJdFile(e.target.files[0]);
@@ -24,7 +25,7 @@ function ResumeRanker() {
     formData.append('file', file);
     formData.append('file_type', type);
     const res = await axios.post('http://localhost:8000/upload/', formData);
-    return res.data.id;
+    return res.data;
   };
 
   const handleSubmit = async (e) => {
@@ -34,18 +35,20 @@ function ResumeRanker() {
     setResults([]);
     try {
       // Upload JD
-      const jd_id = await uploadFile(jdFile, 'jd');
-      setJdId(jd_id);
-      // Upload resumes
+      const jdMeta = await uploadFile(jdFile, 'jd');
+      setJdId(jdMeta.id);
+      // Upload resumes and keep meta
+      const resumeMetaArr = [];
       const resume_ids = [];
       for (let file of resumeFiles) {
-        const rid = await uploadFile(file, 'resume');
-        resume_ids.push(rid);
+        const meta = await uploadFile(file, 'resume');
+        resumeMetaArr.push({ id: meta.id, filename: meta.filename });
+        resume_ids.push(meta.id);
       }
-      setResumeIds(resume_ids);
+      setResumeMeta(resumeMetaArr);
       // Rank resumes
       const formData = new FormData();
-      formData.append('jd_id', jd_id);
+      formData.append('jd_id', jdMeta.id);
       formData.append('resume_ids', resume_ids.join(','));
       const res = await axios.post('http://localhost:8000/rank/', formData);
       setResults(res.data);
@@ -53,6 +56,12 @@ function ResumeRanker() {
       setError('Error: ' + (err.response?.data?.error || err.message));
     }
     setLoading(false);
+  };
+
+  // Helper to get filename from resumeId
+  const getFilename = (resumeId) => {
+    const meta = resumeMeta.find(m => m.id === resumeId);
+    return meta ? meta.filename : resumeId;
   };
 
   return (
@@ -78,7 +87,7 @@ function ResumeRanker() {
             <thead>
               <tr>
                 <th>Rank</th>
-                <th>Resume ID</th>
+                <th>Resume Name</th>
                 <th>Score</th>
                 <th>Missing Keywords</th>
               </tr>
@@ -87,7 +96,7 @@ function ResumeRanker() {
               {results.map(r => (
                 <tr key={r.resumeId}>
                   <td>{r.rank}</td>
-                  <td>{r.resumeId}</td>
+                  <td>{getFilename(r.resumeId)}</td>
                   <td>{r.score.toFixed(2)}</td>
                   <td>{r.missingKeywords.join(', ')}</td>
                 </tr>
